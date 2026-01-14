@@ -466,6 +466,7 @@ git config --global delta.side-by-side true
 ```
 
 Delta features:
+
 - Syntax highlighting
 - Side-by-side view
 - Line numbers
@@ -528,6 +529,7 @@ git log main..groupmate/main --oneline --graph
 While you can't add pull request comments directly from the terminal like GitHub's `gh` CLI, you can:
 
 **1. Create a review file locally:**
+
 ```bash
 # Save diff to a file for adding your comments
 git diff main..groupmate/main > review_notes.txt
@@ -535,6 +537,7 @@ git diff main..groupmate/main > review_notes.txt
 ```
 
 **2. Use the Bitbucket REST API with curl:**
+
 ```bash
 # Add a comment to a PR (requires app password)
 curl -u "your_email:app_password" \
@@ -589,22 +592,26 @@ For most users, the Bitbucket web interface is the easiest way to manage pull re
 #### Using GitLens Extension (Recommended)
 
 **Install GitLens:**
+
 1. Go to Extensions (`Ctrl+Shift+X` / `Cmd+Shift+X`)
 2. Search for **"GitLens"**
 3. Click **Install**
 
 **Compare branches with GitLens:**
+
 1. Click the **GitLens** icon in the sidebar
 2. Expand **"Compare"** section
 3. Click **"Compare References..."**
 4. Select your branch (e.g., `main`)
 5. Select the branch to compare against (e.g., `groupmate/main`)
 6. GitLens shows:
+
    - List of changed files
    - Number of commits difference
    - Click any file to see the diff
 
 **Review inline blame:**
+
 - GitLens shows who changed each line and when
 - Hover over any line to see the commit details
 
@@ -632,6 +639,7 @@ Note: For Bitbucket, use the **Atlassian for VS Code** extension:
 **Problem:** You see "Access denied" or "You don't have permission to create a repository in this workspace" when trying to fork.
 
 **Solution:** You're trying to fork into the `nordlinglab` workspace, which you don't have write access to. When forking:
+
 1. Look for the **"Workspace"** dropdown in the fork dialog
 2. Change it from `nordlinglab` to **your personal workspace** (your username)
 
@@ -642,6 +650,7 @@ Note: For Bitbucket, use the **Atlassian for VS Code** extension:
 **Cause:** You signed up for Bitbucket via Atlassian ID or Google SSO, but never created a personal workspace. Bitbucket accounts created this way don't automatically get a workspace.
 
 **Solution:** Create a workspace first:
+
 1. Go to https://bitbucket.org/account/workspaces/
 2. Click **"Create workspace"**
 3. Enter a name (e.g., your username, name, or nickname)
@@ -669,6 +678,7 @@ git remote set-url origin git@bitbucket.org:THE_WORKSPACE_NAME_YOU_PICKED/YOUR_F
 ### Merge conflicts
 
 If your pull request shows conflicts:
+
 1. Pull the latest changes: `git pull upstream main`
 2. Resolve conflicts in your editor
 3. Commit the resolved files
@@ -698,6 +708,7 @@ git push
 4. Now you can use HTTPS URLs with your email and this new password
 
 When git asks for credentials:
+
 - **Username:** Your Atlassian email address
 - **Password:** The password you just created
 
@@ -712,31 +723,37 @@ SSH keys let you authenticate without entering a password each time. Follow the 
 #### macOS
 
 **Step 1: Check for existing SSH keys**
+
 ```bash
 ls -la ~/.ssh
 ```
 If you see `id_ed25519` and `id_ed25519.pub` (or `id_rsa` and `id_rsa.pub`), you already have keys. Skip to Step 3.
 
 **Step 2: Generate a new SSH key**
+
 ```bash
 ssh-keygen -t ed25519 -C "your.email@example.com"
 ```
+
 - Press Enter to accept the default file location
 - Enter a passphrase (optional but recommended) or press Enter for no passphrase
 
 **Step 3: Start the SSH agent and add your key**
+
 ```bash
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 ```
 
 **Step 4: Copy your public key**
+
 ```bash
 pbcopy < ~/.ssh/id_ed25519.pub
 ```
 This copies the key to your clipboard.
 
 **Step 5: Add the key to Bitbucket**
+
 1. Go to https://bitbucket.org/account/settings/ssh-keys/
 2. Click **"Add key"**
 3. Give it a label (e.g., "My MacBook")
@@ -744,12 +761,14 @@ This copies the key to your clipboard.
 5. Click **"Add key"**
 
 **Step 6: Test the connection**
+
 ```bash
 ssh -T git@bitbucket.org
 ```
 You should see: "authenticated via ssh key" or similar.
 
 **Step 7: Update your repository to use SSH**
+
 ```bash
 cd YOUR_FORK_NAME
 git remote set-url origin git@bitbucket.org:THE_WORKSPACE_NAME_YOU_PICKED/YOUR_FORK_NAME.git
@@ -760,34 +779,41 @@ git remote set-url origin git@bitbucket.org:THE_WORKSPACE_NAME_YOU_PICKED/YOUR_F
 #### Windows
 
 **Step 1: Open Git Bash**
+
 If you installed Git for Windows, you have Git Bash. Search for "Git Bash" in the Start menu.
 
 **Step 2: Check for existing SSH keys**
+
 ```bash
 ls -la ~/.ssh
 ```
 If you see `id_ed25519` and `id_ed25519.pub`, you already have keys. Skip to Step 4.
 
 **Step 3: Generate a new SSH key**
+
 ```bash
 ssh-keygen -t ed25519 -C "your.email@example.com"
 ```
+
 - Press Enter to accept the default file location
 - Enter a passphrase (optional) or press Enter for no passphrase
 
 **Step 4: Start the SSH agent and add your key**
+
 ```bash
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 ```
 
 **Step 5: Copy your public key**
+
 ```bash
 clip < ~/.ssh/id_ed25519.pub
 ```
 This copies the key to your clipboard.
 
 **Step 6: Add the key to Bitbucket**
+
 1. Go to https://bitbucket.org/account/settings/ssh-keys/
 2. Click **"Add key"**
 3. Give it a label (e.g., "My Windows PC")
@@ -795,12 +821,14 @@ This copies the key to your clipboard.
 5. Click **"Add key"**
 
 **Step 7: Test the connection**
+
 ```bash
 ssh -T git@bitbucket.org
 ```
 You should see: "authenticated via ssh key" or similar.
 
 **Step 8: Update your repository to use SSH**
+
 ```bash
 cd YOUR_FORK_NAME
 git remote set-url origin git@bitbucket.org:THE_WORKSPACE_NAME_YOU_PICKED/YOUR_FORK_NAME.git
@@ -811,12 +839,14 @@ git remote set-url origin git@bitbucket.org:THE_WORKSPACE_NAME_YOU_PICKED/YOUR_F
 #### Linux (Ubuntu/Debian)
 
 **Step 1: Check for existing SSH keys**
+
 ```bash
 ls -la ~/.ssh
 ```
 If you see `id_ed25519` and `id_ed25519.pub`, you already have keys. Skip to Step 3.
 
 **Step 2: Generate a new SSH key**
+
 ```bash
 ssh-keygen -t ed25519 -C "your.email@example.com"
 ```
@@ -824,12 +854,14 @@ ssh-keygen -t ed25519 -C "your.email@example.com"
 - Enter a passphrase (optional but recommended) or press Enter for no passphrase
 
 **Step 3: Start the SSH agent and add your key**
+
 ```bash
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
 ```
 
 **Step 4: Copy your public key**
+
 ```bash
 # Install xclip if not installed
 sudo apt install xclip
@@ -845,6 +877,7 @@ cat ~/.ssh/id_ed25519.pub
 Then select and copy the output.
 
 **Step 5: Add the key to Bitbucket**
+
 1. Go to https://bitbucket.org/account/settings/ssh-keys/
 2. Click **"Add key"**
 3. Give it a label (e.g., "My Linux PC")
@@ -852,12 +885,14 @@ Then select and copy the output.
 5. Click **"Add key"**
 
 **Step 6: Test the connection**
+
 ```bash
 ssh -T git@bitbucket.org
 ```
 You should see: "authenticated via ssh key" or similar.
 
 **Step 7: Update your repository to use SSH**
+
 ```bash
 cd YOUR_FORK_NAME
 git remote set-url origin git@bitbucket.org:THE_WORKSPACE_NAME_YOU_PICKED/YOUR_FORK_NAME.git
