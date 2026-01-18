@@ -1,0 +1,98 @@
+# SPDX-License-Identifier: Apache-2.0
+# HRV Analysis Agent Configuration (Custom 2-person CSV Dataset)
+
+dataset:
+  name: custom_csv
+  data_dir: C:/Users/julia/2026_Agentic_AI/course-agenticai-ecg-hrv/data-group/data
+  persons:
+    - id: first_person
+      conditions:
+        Rest:   { glob: "first_person/Rest/*.csv" }
+        Active: { glob: "first_person/Active/*.csv" }
+    - id: second_person
+      conditions:
+        Rest:   { glob: "second_person/Rest/*.csv" }
+        Active: { glob: "second_person/Active/*.csv" }
+
+  csv_format:
+    header: false                 # 若你的 CSV 第一列是欄名就 true；若沒有欄名就改 false
+    columns:
+      frame_index: { index: 0, name: "Frame Index" }
+      timestamp:   { index: 1, name: "Timestamp" }
+      ppg:         { index: 2, name: "PPG" }
+      ecg:         { index: 3, name: "ECG" }
+    ecg_column: { index: 3 }     # HR/HRV uses column D
+    timestamp_column: { index: 1 }   # optional; used only if you need time alignment
+
+  # How the agent should iterate
+  scan_order:
+    - person
+    - state
+    - file
+
+  # Different standards for Rest vs Active
+  scoring_mode_by_state:
+    Rest: rest
+    Active: active
+
+baseline:
+  enabled: true
+
+  # Build personal baselines from which data?
+  # Option A (recommended): baseline from Rest only
+  build_from_states: [Rest]
+
+  # What baseline to store per person
+  metrics:
+    hr_bpm: true
+    hrv:
+      time_domain: [SDNN, RMSSD, pNN50]
+      freq_domain: [LF, HF, LF_HF]
+      nonlinear: [SD1, SD2]
+
+  # How to aggregate across the 4 Rest files
+  aggregation:
+    method: robust                 # robust | mean_std | median_iqr
+    robust:
+      center: median
+      spread: mad                  # median absolute deviation
+    outlier_policy:
+      enabled: true
+      z_max: 3.5                   # used if method=robust; (MAD-z) threshold
+
+  # Optional: also learn Active deviation relative to Rest baseline
+  active_profile:
+    enabled: true
+    build_from_states: [Active]
+    store_as: delta_from_rest       # store Active baseline as delta vs Rest
+
+signal:
+  sampling_rate: 50
+  bandpass_low: 0.5
+  bandpass_high: 20.0               # must be < 25Hz (Nyquist)
+  filter_order: 4
+
+r_peak:
+  min_rr_sec: 0.3
+  max_rr_sec: 2.0
+  remove_ectopic: true
+
+features:
+  window_size_sec: 180
+  overlap: 0.5
+  resample_rate: 4.0
+  include_nonlinear: true
+
+frequency_bands:
+  vlf: [0.003, 0.04]
+  lf: [0.04, 0.15]
+  hf: [0.15, 0.4]
+
+report:
+  include_plots: true
+  include_ai_interpretation: true
+  output_format: pdf
+
+logging:
+  level: INFO
+  file: null
