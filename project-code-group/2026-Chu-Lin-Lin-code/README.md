@@ -3,7 +3,7 @@
 An **HRV-based stress classifier** that extracts Heart Rate Variability features from raw ECG signals and evaluates stress vs baseline states through dataset analysis.
 
 **Group:** 2026-Chu-Lin-Lin
-**Authors:** Chen Wei, Lin MeiLing, Wang XiaoMing
+**Authors:** CHU,YEN-CHIEH, LIN,CHIH-YI ,LIN,WEN-HSIN
 **License:** Apache-2.0
 
 ---
