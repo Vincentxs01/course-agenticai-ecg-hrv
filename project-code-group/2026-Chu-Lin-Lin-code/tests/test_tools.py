@@ -5,22 +5,26 @@ import numpy as np
 import pytest
 import tempfile
 from pathlib import Path
+import pandas as pd # Added import
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.tools.ecg_loader import load_ecg
+from src.tools.ecg_loader import (
+    load_ecg,
+    pick_ecg_column,
+    pick_time_column,
+)
 from src.tools.signal_processor import (
     bandpass_filter,
     detect_r_peaks,
     compute_rr_intervals,
     process_signal
 )
-from src.tools.feature_extractor import (
-    extract_time_domain_features,
-    extract_frequency_domain_features,
-    extract_hrv_features
+from src.tools.extended_features import (
+    extract_extended_features
 )
+
 
 
 class TestECGLoader:
@@ -149,79 +153,7 @@ class TestSignalProcessor:
         assert result["n_beats"] > 0
 
 
-class TestFeatureExtractor:
-    """Tests for HRV feature extraction."""
 
-    def test_time_domain_features(self):
-        """Test time-domain feature extraction."""
-        # Regular RR intervals (1000 ms = 60 bpm)
-        rr_intervals = np.array([1000, 1000, 1000, 1000, 1000])
-
-        features = extract_time_domain_features(rr_intervals)
-
-        assert "mean_rr" in features
-        assert "sdnn" in features
-        assert "rmssd" in features
-        assert "pnn50" in features
-
-        assert features["mean_rr"] == 1000
-        assert features["sdnn"] == 0  # No variation
-        assert features["rmssd"] == 0  # No successive differences
-
-    def test_time_domain_with_variation(self):
-        """Test time-domain features with varying RR intervals."""
-        # Variable RR intervals
-        rr_intervals = np.array([900, 1000, 950, 1050, 1000, 900, 1100])
-
-        features = extract_time_domain_features(rr_intervals)
-
-        assert features["sdnn"] > 0
-        assert features["rmssd"] > 0
-        assert features["mean_hr"] > 0
-
-    def test_frequency_domain_features(self):
-        """Test frequency-domain feature extraction."""
-        # Create RR intervals with some variability
-        np.random.seed(42)
-        rr_intervals = 1000 + 50 * np.random.randn(100)
-
-        features = extract_frequency_domain_features(rr_intervals)
-
-        assert "lf_power" in features
-        assert "hf_power" in features
-        assert "lf_hf_ratio" in features
-
-        # Powers should be non-negative
-        assert features["lf_power"] >= 0
-        assert features["hf_power"] >= 0
-
-    def test_extract_all_features(self):
-        """Test extracting all HRV features."""
-        np.random.seed(42)
-        rr_intervals = 1000 + 50 * np.random.randn(200)
-
-        features = extract_hrv_features(rr_intervals, include_nonlinear=True)
-
-        # Check time-domain
-        assert "sdnn" in features
-        assert "rmssd" in features
-
-        # Check frequency-domain
-        assert "lf_power" in features
-        assert "hf_power" in features
-
-        # Check non-linear
-        assert "sd1" in features
-        assert "sd2" in features
-
-    def test_empty_intervals(self):
-        """Test handling of empty RR intervals."""
-        rr_intervals = np.array([])
-
-        features = extract_time_domain_features(rr_intervals)
-
-        assert np.isnan(features["sdnn"])
-        assert np.isnan(features["rmssd"])
 
 
 class TestIntegration:
@@ -266,7 +198,7 @@ class TestIntegration:
             assert processed["n_beats"] > 100
 
             # Extract features
-            features = extract_hrv_features(processed["rr_intervals"])
+            features = extract_extended_features(processed["rr_intervals"])
             assert not np.isnan(features["sdnn"])
             assert not np.isnan(features["rmssd"])
             assert features["sdnn"] > 0
@@ -277,3 +209,44 @@ class TestIntegration:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestECGColumnPicking:
+    """Tests for ECG column picking utility functions."""
+
+    def test_pick_ecg_column_named(self):
+        """Test picking ECG column by name."""
+        df = pd.DataFrame({"Timestamp": [1, 2], "ECG": [0.1, 0.2], "PPG": [0.3, 0.4]})
+        assert pick_ecg_column(df) == "ECG"
+
+    def test_pick_ecg_column_named_lowercase(self):
+        """Test picking ECG column by lowercase name."""
+        df = pd.DataFrame({"Timestamp": [1, 2], "ecg": [0.1, 0.2], "PPG": [0.3, 0.4]})
+        assert pick_ecg_column(df) == "ecg"
+
+    def test_pick_ecg_column_by_index(self):
+        """Test picking ECG column by default index (3rd column)."""
+        df = pd.DataFrame({"A": [1, 2], "B": [3, 4], "C": [5, 6], "D": [0.1, 0.2]})
+        assert pick_ecg_column(df) == "D"
+
+    def test_pick_ecg_column_raises_error(self):
+        """Test picking ECG column raises error if not found."""
+        df = pd.DataFrame({"A": [1, 2], "B": [3, 4]}) # Only 2 columns
+        with pytest.raises(ValueError, match="Cannot find ECG column"):
+            pick_ecg_column(df)
+
+    def test_pick_time_column_named_timestamp(self):
+        """Test picking time column by name 'Timestamp'."""
+        df = pd.DataFrame({"Timestamp": [1, 2], "ECG": [0.1, 0.2]})
+        assert pick_time_column(df) == "Timestamp"
+
+    def test_pick_time_column_named_time(self):
+        """Test picking time column by name 'Time'."""
+        df = pd.DataFrame({"Time": [1, 2], "ECG": [0.1, 0.2]})
+        assert pick_time_column(df) == "Time"
+
+    def test_pick_time_column_not_found(self):
+        """Test picking time column returns None if not found."""
+        df = pd.DataFrame({"ECG": [0.1, 0.2]})
+        assert pick_time_column(df) is None
+

@@ -19,6 +19,7 @@ from .tools import (
     extract_extended_features,
     generate_report
 )
+from .tools.ecg_loader import read_ecg_csv_column # New import
 
 class HRVAnalysisOrchestrator:
     """
@@ -56,20 +57,6 @@ class HRVAnalysisOrchestrator:
                     })
 
         return records
-
-    def _load_ecg_csv(self, csv_path: Path) -> np.ndarray:
-        df = pd.read_csv(csv_path)
-
-        # prefer ECG column name
-        for col in ["ECG", "ecg", "Ecg"]:
-            if col in df.columns:
-                return df[col].astype(float).to_numpy()
-
-        # fallback: 4th column (A,B,C,D -> ECG is D)
-        if df.shape[1] >= 4:
-            return df.iloc[:, 3].astype(float).to_numpy()
-
-        raise ValueError(f"Cannot infer ECG column in {csv_path}. Columns={list(df.columns)}")
 
     def _window_slices(self, n: int, win: int, stride: int):
         s = 0
@@ -231,7 +218,7 @@ class HRVAnalysisOrchestrator:
                 for rec in records:
                     if rec["person"] != pid or rec["state"] != st:
                         continue
-                    sig = self._load_ecg_csv(rec["path"])
+                    sig = read_ecg_csv_column(rec["path"]) # Updated call
                     for s, e in self._window_slices(len(sig), win, stride):
                         m = self._window_metrics(sig[s:e], fs, filter_low, filter_high)
                         if m is not None:
@@ -255,7 +242,7 @@ class HRVAnalysisOrchestrator:
             base = baselines[pid][st]
             k = k_rest if st.lower() == "rest".lower() else k_active
 
-            sig = self._load_ecg_csv(fpath)
+            sig = read_ecg_csv_column(fpath) # Updated call
 
             n_win = 0
             n_pass = 0

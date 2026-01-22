@@ -10,18 +10,8 @@ from typing import Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Optional imports for PDF generation
-try:
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.platypus import (
-        SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle
-    )
-    from reportlab.lib import colors
-    REPORTLAB_AVAILABLE = True
-except ImportError:
-    REPORTLAB_AVAILABLE = False
+# Optional imports for PDF generation (Removed reportlab, now generating Markdown)
+REPORTLAB_AVAILABLE = False # No longer attempting to import
 
 # Optional import for Claude API
 try:
@@ -33,7 +23,8 @@ except ImportError:
 
 def generate_interpretation(
     features: dict,
-    prediction: dict,
+    pass_rate: Optional[float] = None, # New argument
+    evaluation_summary: str = "N/A",   # New argument
     model: str = "claude-opus-4-5-20251101"
 ) -> dict:
     """
@@ -41,7 +32,8 @@ def generate_interpretation(
 
     Args:
         features: Dictionary of HRV features
-        prediction: Dictionary of prediction results
+        pass_rate: Overall pass rate from rule-based evaluation.
+        evaluation_summary: A text summary of the rule-based evaluation.
         model: Claude model to use
 
     Returns:
@@ -63,7 +55,8 @@ def generate_interpretation(
 
     client = anthropic.Anthropic()
 
-    prompt = f"""Analyze these HRV metrics and stress classification results.
+    # Modified prompt to reflect rule-based evaluation
+    prompt = f"""Analyze these HRV metrics and baseline evaluation results.
 Write a Discussion and Conclusion section for a clinical HRV analysis report.
 
 HRV Metrics:
@@ -75,20 +68,19 @@ HRV Metrics:
 - HF Power: {features.get('hf_power', 'N/A'):.2f} ms²
 - LF/HF Ratio: {features.get('lf_hf_ratio', 'N/A'):.2f} (normal range: 1.0-2.0)
 
-Classification Result:
-- Prediction: {prediction.get('prediction', 'N/A')}
-- Confidence: {prediction.get('confidence', 0):.1%}
-- Stress Probability: {prediction.get('stress_probability', 0):.1%}
+Baseline Evaluation Results:
+- Overall Pass Rate: {pass_rate:.1%}
+- Summary: {evaluation_summary}
 
 Provide:
 1. **Discussion** (2-3 paragraphs): Interpret the HRV metrics in clinical context.
    Explain what the values indicate about autonomic nervous system balance.
-   Discuss the classification result and its implications.
+   Discuss the overall pass rate and what the evaluation summary implies about physiological consistency.
 
 2. **Conclusion** (1 paragraph): Summarize findings and provide recommendations
-   for the individual (rest, stress management, follow-up, etc.).
+   for the individual (e.g., suggestions based on consistency with baseline).
 
-Use professional medical report language. Be specific about the metrics.
+Use professional medical report language. Be specific about the metrics and the rule-based evaluation.
 Format with clear section headers."""
 
     try:
@@ -128,7 +120,8 @@ def create_visualizations(
     ecg_data: dict,
     processed: dict,
     features: dict,
-    prediction: dict
+    pass_rate: Optional[float] = None, # New argument
+    evaluation_summary: str = "N/A"    # New argument
 ) -> bytes:
     """
     Create visualization plots for the report.
@@ -137,7 +130,8 @@ def create_visualizations(
         ecg_data: Raw ECG data dictionary
         processed: Processed signal data
         features: HRV features
-        prediction: Classification result
+        pass_rate: Overall pass rate from rule-based evaluation.
+        evaluation_summary: A text summary of the rule-based evaluation.
 
     Returns:
         bytes: PNG image data
@@ -205,25 +199,13 @@ def create_visualizations(
     ax3.set_title(f'Frequency-Domain Power (LF/HF = {features.get("lf_hf_ratio", 0):.2f})')
     ax3.grid(True, alpha=0.3, axis='y')
 
-    # Plot 4: Classification Result
+    # Plot 4: Rule-Based Evaluation Summary
     ax4 = axes[1, 1]
-    probs = [
-        prediction.get('baseline_probability', 0.5),
-        prediction.get('stress_probability', 0.5)
-    ]
-    labels_pred = ['Baseline', 'Stressed']
-    colors_pred = ['#2ecc71', '#e74c3c']
-
-    wedges, texts, autotexts = ax4.pie(
-        probs,
-        labels=labels_pred,
-        colors=colors_pred,
-        autopct='%1.1f%%',
-        startangle=90,
-        explode=(0.05, 0.05)
-    )
-    ax4.set_title(f'Classification: {prediction.get("prediction", "Unknown")}\n'
-                  f'(Confidence: {prediction.get("confidence", 0):.1%})')
+    ax4.text(0.5, 0.7, "Rule-Based Evaluation", ha='center', va='center', fontsize=12, fontweight='bold', transform=ax4.transAxes)
+    ax4.text(0.5, 0.5, f"Overall Pass Rate:", ha='center', va='center', fontsize=10, transform=ax4.transAxes)
+    ax4.text(0.5, 0.3, f"{pass_rate:.1%}" if pass_rate is not None else "N/A", ha='center', va='center', fontsize=18, fontweight='bold', color='darkgreen' if (pass_rate or 0) > 0.8 else 'darkred', transform=ax4.transAxes)
+    ax4.axis('off') # Hide axes for text display
+    ax4.set_title(evaluation_summary, fontsize=9, wrap=True) # Use evaluation_summary as title for the subplot
 
     plt.tight_layout()
 
@@ -240,154 +222,90 @@ def generate_report(
     ecg_data: dict,
     processed: dict,
     features: dict,
-    prediction: dict,
     output_path: Union[str, Path],
+    pass_rate: Optional[float] = None,
+    evaluation_summary: str = "N/A",
     include_ai_interpretation: bool = True
 ) -> str:
     """
-    Generate a complete PDF report with HRV analysis results.
+    Generate a complete Markdown report with HRV analysis results.
 
     Args:
         ecg_data: Raw ECG data dictionary
         processed: Processed signal data
         features: HRV features dictionary
-        prediction: Classification result dictionary
-        output_path: Path for the output PDF
+        output_path: Path for the output Markdown file (e.g., .md)
+        pass_rate: Overall pass rate from rule-based evaluation.
+        evaluation_summary: A text summary of the rule-based evaluation.
         include_ai_interpretation: Whether to include Claude-generated text
 
     Returns:
         str: Path to the generated report
     """
-    output_path = Path(output_path)
+    output_path = Path(output_path).with_suffix('.md') # Ensure .md suffix
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     # Generate AI interpretation if requested
     if include_ai_interpretation:
-        interpretation = generate_interpretation(features, prediction)
+        interpretation = generate_interpretation(
+            features,
+            pass_rate=pass_rate,
+            evaluation_summary=evaluation_summary
+        )
     else:
         interpretation = {
             "discussion": "AI interpretation not requested.",
             "conclusion": "Please review the HRV metrics above.",
         }
 
-    # Generate visualizations
-    img_data = create_visualizations(ecg_data, processed, features, prediction)
-
-    if not REPORTLAB_AVAILABLE:
-        # Fallback: save as text + image
-        text_path = output_path.with_suffix('.txt')
-        img_path = output_path.with_suffix('.png')
-
-        with open(img_path, 'wb') as f:
-            f.write(img_data)
-
-        with open(text_path, 'w') as f:
-            f.write("HRV ANALYSIS REPORT\n")
-            f.write("=" * 50 + "\n\n")
-            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-            f.write("HRV FEATURES\n")
-            f.write("-" * 30 + "\n")
-            for key, value in features.items():
-                if isinstance(value, float):
-                    f.write(f"{key}: {value:.2f}\n")
-                else:
-                    f.write(f"{key}: {value}\n")
-            f.write("\nCLASSIFICATION\n")
-            f.write("-" * 30 + "\n")
-            f.write(f"Prediction: {prediction.get('prediction', 'N/A')}\n")
-            f.write(f"Confidence: {prediction.get('confidence', 0):.1%}\n")
-            f.write("\nDISCUSSION\n")
-            f.write("-" * 30 + "\n")
-            f.write(interpretation['discussion'] + "\n\n")
-            f.write("CONCLUSION\n")
-            f.write("-" * 30 + "\n")
-            f.write(interpretation['conclusion'] + "\n")
-
-        return str(text_path)
-
-    # Generate PDF with ReportLab
-    doc = SimpleDocTemplate(
-        str(output_path),
-        pagesize=A4,
-        rightMargin=0.75*inch,
-        leftMargin=0.75*inch,
-        topMargin=0.75*inch,
-        bottomMargin=0.75*inch
+    # Generate visualizations (still generates PNG, will be embedded in MD)
+    img_data = create_visualizations(
+        ecg_data,
+        processed,
+        features,
+        pass_rate=pass_rate,
+        evaluation_summary=evaluation_summary
     )
 
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=18,
-        spaceAfter=20,
-        alignment=1  # Center
-    )
-    heading_style = styles['Heading2']
-    body_style = styles['Normal']
+    # Save visualization image alongside the MD report
+    img_path = output_path.with_suffix('.png')
+    with open(img_path, 'wb') as f:
+        f.write(img_data)
 
-    story = []
+    # Build Markdown report
+    markdown_content = f"""# HRV Analysis Report
 
-    # Title
-    story.append(Paragraph("HRV Analysis Report", title_style))
-    story.append(Paragraph(
-        f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        body_style
-    ))
-    story.append(Spacer(1, 20))
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-    # Visualizations
-    img_buffer = io.BytesIO(img_data)
-    img = Image(img_buffer, width=6.5*inch, height=5.2*inch)
-    story.append(img)
-    story.append(Spacer(1, 20))
+## 1. HRV Features Summary
 
-    # HRV Features Table
-    story.append(Paragraph("HRV Features Summary", heading_style))
-    table_data = [
-        ['Metric', 'Value', 'Normal Range'],
-        ['SDNN (ms)', f"{features.get('sdnn', 0):.2f}", '50-100'],
-        ['RMSSD (ms)', f"{features.get('rmssd', 0):.2f}", '20-50'],
-        ['pNN50 (%)', f"{features.get('pnn50', 0):.2f}", '10-25'],
-        ['Mean HR (bpm)', f"{features.get('mean_hr', 0):.1f}", '60-100'],
-        ['LF/HF Ratio', f"{features.get('lf_hf_ratio', 0):.2f}", '1.0-2.0'],
-    ]
-    table = Table(table_data, colWidths=[2*inch, 1.5*inch, 1.5*inch])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 11),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ]))
-    story.append(table)
-    story.append(Spacer(1, 20))
+| Metric      | Value           | Normal Range |
+|-------------|-----------------|--------------|
+| SDNN (ms)   | {features.get('sdnn', 0):.2f}    | 50-100       |
+| RMSSD (ms)  | {features.get('rmssd', 0):.2f}   | 20-50        |
+| pNN50 (%)   | {features.get('pnn50', 0):.2f}    | 10-25        |
+| Mean HR (bpm)| {features.get('mean_hr', 0):.1f} | 60-100       |
+| LF/HF Ratio | {features.get('lf_hf_ratio', 0):.2f} | 1.0-2.0      |
 
-    # Classification Result
-    story.append(Paragraph("Classification Result", heading_style))
-    story.append(Paragraph(
-        f"<b>Prediction:</b> {prediction.get('prediction', 'N/A')}",
-        body_style
-    ))
-    story.append(Paragraph(
-        f"<b>Confidence:</b> {prediction.get('confidence', 0):.1%}",
-        body_style
-    ))
-    story.append(Spacer(1, 15))
+## 2. Evaluation Summary
 
-    # Discussion
-    story.append(Paragraph("Discussion", heading_style))
-    story.append(Paragraph(interpretation['discussion'], body_style))
-    story.append(Spacer(1, 15))
+**Overall Pass Rate:** {f"{pass_rate:.1%}" if pass_rate is not None else "N/A"}
+**Summary:** {evaluation_summary}
 
-    # Conclusion
-    story.append(Paragraph("Conclusion", heading_style))
-    story.append(Paragraph(interpretation['conclusion'], body_style))
+## 3. Visualizations
 
-    # Build PDF
-    doc.build(story)
+![HRV Analysis Visualizations]({img_path.name})
+
+## 4. Discussion
+
+{interpretation['discussion']}
+
+## 5. Conclusion
+
+{interpretation['conclusion']}
+"""
+    # Write Markdown content to file
+    with open(output_path, 'w', encoding="utf-8") as f:
+        f.write(markdown_content)
 
     return str(output_path)

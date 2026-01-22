@@ -17,88 +17,24 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# repo root (local for output path resolution)
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from src.utils import setup_logging, load_config
+from src.utils.helpers import (
+    REPO_ROOT as UTILS_REPO_ROOT,
+    resolve_data_dir,
+    resolve_sampling_rate,
+    infer_persons_states, # New import
+    scan_csv_files,       # New import
+)
 from src.tools.signal_processor import process_signal
 from src.tools.extended_features import extract_extended_features
+from src.tools.ecg_loader import pick_ecg_column # New import
 
 
-def _default_config_path() -> Path:
-    return (REPO_ROOT / "config" / "config.yaml").resolve()
-
-
-def _resolve_data_dir(cfg: dict) -> Path:
-    candidates = [
-        cfg.get("dataset", {}).get("data_dir"),
-        cfg.get("data", {}).get("data_dir"),
-        cfg.get("custom", {}).get("data_dir"),
-        cfg.get("wesad", {}).get("data_dir"),
-    ]
-
-    bases = [
-        REPO_ROOT,                  # .../project-code-group/2026-Chu-Lin-Lin-code
-        REPO_ROOT.parent,           # .../project-code-group
-        REPO_ROOT.parent.parent,    # .../course-agenticai-ecg-hrv
-    ]
-
-    for c in candidates:
-        if not c:
-            continue
-
-        # Try relative to common bases
-        for b in bases:
-            p = (b / c).resolve()
-            if p.exists():
-                return p
-
-        # Also try as absolute
-        p2 = Path(c).expanduser().resolve()
-        if p2.exists():
-            return p2
-
-    # Common fallbacks
-    for b in bases:
-        for p in [(b / "data-group" / "data"), (b / "data-group")]:
-            p = p.resolve()
-            if p.exists():
-                return p
-
-    raise FileNotFoundError("Cannot find data directory (checked config + common fallbacks).")
-
-
-
-def _resolve_sampling_rate(cfg: dict) -> float:
-    return float(cfg.get("signal", {}).get("sampling_rate", 50))
-
-
-def _infer_persons_states(data_dir: Path):
-    persons = [p.name for p in data_dir.iterdir() if p.is_dir()]
-    states = ["Rest", "Active"]
-    return persons, states
-
-
-def _pick_ecg_column(df: pd.DataFrame) -> str:
-    for name in ["ECG", "ecg", "Ecg"]:
-        if name in df.columns:
-            return name
-    if df.shape[1] >= 4:
-        return df.columns[3]
-    raise ValueError(f"Cannot find ECG column. Columns={list(df.columns)}")
-
-
-def scan_csv_files(data_dir: Path, file_glob: str = "*.csv"):
-    persons, states = _infer_persons_states(data_dir)
-    records = []
-    for pid in persons:
-        for st in states:
-            folder = data_dir / pid / st
-            if not folder.exists():
-                continue
-            for f in sorted(folder.glob(file_glob)):
-                records.append({"person": pid, "state": st, "path": f})
-    return records
+# Removed local _infer_persons_states and scan_csv_files
 
 
 def window_slices(n: int, win: int, stride: int):
@@ -123,10 +59,10 @@ def main():
     args = parse_args()
     logger = setup_logging()
 
-    cfg_path = Path(args.config).resolve() if args.config else _default_config_path()
+    cfg_path = Path(args.config).resolve() if args.config else (UTILS_REPO_ROOT / "config" / "config.yaml").resolve() # Use UTILS_REPO_ROOT
     cfg = load_config(str(cfg_path))
-    data_dir = _resolve_data_dir(cfg)
-    fs = _resolve_sampling_rate(cfg)
+    data_dir = resolve_data_dir(cfg) # Updated call
+    fs = resolve_sampling_rate(cfg) # Updated call
 
     outdir = (REPO_ROOT / args.outdir).resolve()
     outdir.mkdir(parents=True, exist_ok=True)
@@ -150,7 +86,7 @@ def main():
         f = r["path"]
         df = pd.read_csv(f)
 
-        ecg_col = _pick_ecg_column(df)
+        ecg_col = pick_ecg_column(df) # Updated call
         ecg = df[ecg_col].astype(float).to_numpy()
         n = len(ecg)
 

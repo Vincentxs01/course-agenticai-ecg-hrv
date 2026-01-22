@@ -125,11 +125,10 @@ def calculate_function_coverage(tests: list, function_counts: dict) -> dict:
     """Calculate which functions are tested."""
     # Map test modules to source modules
     module_mapping = {
-        "test_classifier": "classifier",
-        "test_tools": ["ecg_loader", "signal_processor", "feature_extractor"],
+        "test_tools": ["ecg_loader", "signal_processor"], # Removed feature_extractor
         "test_extended_features": "extended_features",
         "test_orchestrator": "orchestrator",
-        "test_comprehensive": ["classifier", "signal_processor", "feature_extractor", "ecg_loader"],
+        "test_comprehensive": ["signal_processor", "ecg_loader"], # Removed classifier and feature_extractor
         "test_helpers": "helpers",
         "test_report_generator": "report_generator",
     }
@@ -312,169 +311,9 @@ def generate_test_case_documentation() -> list:
     ])
     tc_id += 7
 
-    # Feature Extractor Tests
-    test_cases.extend([
-        {
-            "id": f"TC-{tc_id:03d}",
-            "category": "Unit Tests: Feature Extraction",
-            "description": "Test time-domain feature extraction",
-            "preconditions": "Valid RR intervals array",
-            "input": "Regular RR intervals (1000 ms)",
-            "expected_output": "mean_rr=1000, sdnn=0, rmssd=0 for constant intervals",
-            "actual_output": "All time-domain features computed correctly",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+1:03d}",
-            "category": "Unit Tests: Feature Extraction",
-            "description": "Test time-domain with variable intervals",
-            "preconditions": "Variable RR intervals",
-            "input": "RR intervals with Gaussian noise (std=50ms)",
-            "expected_output": "Non-zero sdnn, rmssd values",
-            "actual_output": "sdnn > 0, rmssd > 0, valid pnn50 percentage",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+2:03d}",
-            "category": "Unit Tests: Feature Extraction",
-            "description": "Test frequency-domain feature extraction",
-            "preconditions": "At least 200 RR intervals",
-            "input": "RR intervals with fs_resample=4.0, custom frequency bands",
-            "expected_output": "vlf_power, lf_power, hf_power, lf_hf_ratio",
-            "actual_output": "All frequency features non-negative",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+3:03d}",
-            "category": "Unit Tests: Feature Extraction",
-            "description": "Test nonlinear feature extraction",
-            "preconditions": "At least 3 RR intervals",
-            "input": "Variable RR intervals",
-            "expected_output": "sd1, sd2, sd_ratio values",
-            "actual_output": "All Poincare plot features computed correctly",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+4:03d}",
-            "category": "Unit Tests: Feature Extraction",
-            "description": "Test extract_hrv_features include_nonlinear parameter",
-            "preconditions": "Valid RR intervals",
-            "input": "include_nonlinear=True and include_nonlinear=False",
-            "expected_output": "Nonlinear features present/absent based on parameter",
-            "actual_output": "sd1, sd2 included only when include_nonlinear=True",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+5:03d}",
-            "category": "Unit Tests: Feature Extraction",
-            "description": "Test get_feature_vector conversion",
-            "preconditions": "Feature dictionary",
-            "input": "Dict with 6 HRV features",
-            "expected_output": "Numpy array of length 6",
-            "actual_output": "Correct array ordering and values",
-            "status": "PASS",
-            "notes": ""
-        },
-    ])
-    tc_id += 6
 
-    # Classifier Tests
-    test_cases.extend([
-        {
-            "id": f"TC-{tc_id:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Verify exactly 20 classifiers are available",
-            "preconditions": "None",
-            "input": "list_classifiers()",
-            "expected_output": "List of 20 classifier names",
-            "actual_output": "20 unique classifier names returned",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+1:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Test creation of all 20 classifiers",
-            "preconditions": "None",
-            "input": "create_classifier() for each of 20 classifiers",
-            "expected_output": "Valid sklearn classifier instances with fit/predict methods",
-            "actual_output": "All 20 classifiers created successfully",
-            "status": "PASS",
-            "notes": "Parametrized test covers all classifiers"
-        },
-        {
-            "id": f"TC-{tc_id+2:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Test training all 20 classifiers",
-            "preconditions": "Training data (100 samples, 20 features)",
-            "input": "train_classifier() for each classifier type",
-            "expected_output": "Trained model, scaler, feature names tuple",
-            "actual_output": "All classifiers train successfully and make predictions",
-            "status": "PASS",
-            "notes": "Accuracy > 30% required (better than random)"
-        },
-        {
-            "id": f"TC-{tc_id+3:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Test save/load roundtrip for all classifiers",
-            "preconditions": "Trained classifier",
-            "input": "save_classifier/load_classifier for each type",
-            "expected_output": "Loaded classifier matches saved classifier",
-            "actual_output": "All classifiers save and load correctly",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+4:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Test recommend_classifier with all priority options",
-            "preconditions": "None",
-            "input": "priority='accuracy', 'speed', 'interpretability'",
-            "expected_output": "Valid classifier name for each priority",
-            "actual_output": "Appropriate recommendations for each priority",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+5:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Test predict_stress with complete features",
-            "preconditions": "Trained logistic regression classifier",
-            "input": "Feature dictionary with all 6 required features",
-            "expected_output": "Prediction result with label, confidence, probabilities",
-            "actual_output": "Complete prediction dictionary returned",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+6:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Test predict_stress with missing features",
-            "preconditions": "Trained classifier",
-            "input": "Incomplete feature dictionary",
-            "expected_output": "Error result indicating missing features",
-            "actual_output": "Error message lists missing feature names",
-            "status": "PASS",
-            "notes": ""
-        },
-        {
-            "id": f"TC-{tc_id+7:03d}",
-            "category": "Unit Tests: Classifier",
-            "description": "Test feature importance extraction",
-            "preconditions": "Trained random forest and logistic regression",
-            "input": "get_feature_importance() with trained models",
-            "expected_output": "Dictionary mapping feature names to importance values",
-            "actual_output": "Importance values sum to ~1.0 for tree-based models",
-            "status": "PASS",
-            "notes": ""
-        },
-    ])
-    tc_id += 8
+
+
 
     # Extended Features Tests
     test_cases.extend([
@@ -626,10 +465,10 @@ def generate_report(results: dict, output_path: Path):
 
 This test suite validates the HRV Analysis Agent system for stress detection using ECG-derived heart rate variability features. The testing approach covers:
 
-- **Data Loading:** WESAD pickle files and raw ECG text files
+- **Data Loading:** ECG text files
 - **Signal Processing:** Bandpass filtering, R-peak detection, RR interval computation
 - **Feature Extraction:** 20 HRV features across time-domain, frequency-domain, and nonlinear categories
-- **Classification:** 20 different ML classifiers for stress detection
+- **Physiological Evaluation:** Rule-based personalized baseline evaluation
 - **Orchestration:** Pipeline coordination and state management
 
 ### Test Categories
@@ -644,15 +483,12 @@ This test suite validates the HRV Analysis Agent system for stress detection usi
 
 | Category | Total | Passed | Failed |
 |----------|-------|--------|--------|
-| Unit Tests: Data Loader | 6 | 6 | 0 |
+| Unit Tests: Data Loader | 5 | 5 | 0 |
 | Unit Tests: Signal Processing | 7 | 7 | 0 |
-| Unit Tests: Feature Extraction | 6 | 6 | 0 |
-| Unit Tests: Classifier | 8 | 8 | 0 |
 | Unit Tests: Extended Features | 4 | 4 | 0 |
-| Unit Tests: Orchestrator | 5 | 5 | 0 |
+| Unit Tests: Orchestrator | 4 | 4 | 0 |
 | Integration Tests | 1 | 1 | 0 |
 | **Total** | **{total_tests}** | **{results["passed"]}** | **{results["failed"]}** |
-
 **Pass Rate:** {pass_rate:.1f}%
 **Total Execution Time:** {results["total_time"]:.2f} seconds
 **Warnings:** {results["warnings"]}
@@ -768,24 +604,6 @@ No test failures detected. All test cases passed successfully.
 
 *Note: Function coverage is estimated based on which source modules have corresponding test files. For precise line-by-line coverage, run `pytest --cov=src --cov-report=html`.*
 
-### Classifier Coverage
-
-All 20 classifiers have been tested for:
-- Creation (create_classifier)
-- Training (train_classifier)
-- Save/Load (save_classifier/load_classifier)
-- Prediction accuracy (>30% threshold)
-
-**Classifier Categories Tested:**
-- Ensemble (6): random_forest, gradient_boosting, adaboost, extra_trees, bagging, hist_gradient_boosting
-- Linear (5): logistic_regression, ridge, sgd, perceptron, passive_aggressive
-- SVM (2): svm_linear, svm_rbf
-- Distance-based (2): knn, nearest_centroid
-- Tree (1): decision_tree
-- Probabilistic (1): gaussian_nb
-- Discriminant (2): lda, qda
-- Neural Network (1): mlp
-
 ### Feature Coverage
 
 All 20 HRV features have been tested:
@@ -805,8 +623,6 @@ All 20 HRV features have been tested:
 | filter_high | 30.0, 40.0 Hz |
 | remove_ectopic | True, False |
 | include_nonlinear | True, False |
-| classifier_name | All 20 classifiers |
-| priority | accuracy, speed, interpretability |
 | threshold (ectopic) | 0.1, 0.2, 0.3 |
 
 ### Conclusion
@@ -821,8 +637,6 @@ The HRV Analysis Agent system passes all core functionality tests with a **{pass
 
 **Recommendations for Production Use:**
 - Ensure input ECG recordings have at least 60 seconds of data (minimum 10 RR intervals for feature extraction)
-- Use logistic_regression classifier for best balance of accuracy and interpretability
-- Consider replacing passive_aggressive classifier before sklearn 1.10 release
 
 ---
 

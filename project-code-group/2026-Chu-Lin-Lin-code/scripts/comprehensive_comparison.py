@@ -23,46 +23,22 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-try:
-    import yaml
-except Exception:
-    yaml = None
+# Import load_config from src.utils.helpers
+from src.utils.helpers import load_config 
+# Import read_ecg_csv_column from src.tools.ecg_loader
+from src.tools.ecg_loader import read_ecg_csv_column
 
-from scipy.signal import butter, filtfilt, find_peaks
+# Import bandpass_filter and detect_r_peaks from src.tools.signal_processor
+from src.tools.signal_processor import bandpass_filter, detect_r_peaks
+
+# -----------------------------
+# Config loading (removed local definition)
+# -----------------------------
 
 
 # -----------------------------
-# Config loading
+# Signal processing + features (moved bandpass_filter and detect_r_peaks to src/tools)
 # -----------------------------
-def load_config(path: str) -> dict:
-    p = Path(path)
-    if not p.exists():
-        raise FileNotFoundError(f"Config not found: {path}")
-    if yaml is None:
-        raise RuntimeError("PyYAML is not installed. Please `pip install pyyaml`.")
-    with p.open("r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-
-# -----------------------------
-# Signal processing + features
-# -----------------------------
-def bandpass_filter(x: np.ndarray, fs: int, low: float, high: float, order: int = 4) -> np.ndarray:
-    nyq = fs / 2.0
-    high = min(high, nyq - 1e-6)  # safety
-    b, a = butter(order, [low / nyq, high / nyq], btype="band")
-    return filtfilt(b, a, x)
-
-
-def detect_r_peaks(ecg: np.ndarray, fs: int, min_rr_sec: float) -> np.ndarray:
-    # Simple peak detection:
-    # - distance enforces min RR
-    # - prominence based on robust scale
-    distance = max(1, int(min_rr_sec * fs))
-    scale = np.median(np.abs(ecg - np.median(ecg))) + 1e-8  # MAD-like
-    prominence = 1.5 * scale
-    peaks, _ = find_peaks(ecg, distance=distance, prominence=prominence)
-    return peaks
 
 
 def rr_intervals_seconds(r_peaks: np.ndarray, fs: int) -> np.ndarray:
@@ -87,16 +63,8 @@ def hrv_metrics(rr_sec: np.ndarray) -> dict:
 
 
 # -----------------------------
-# Dataset scanning / CSV loading
+# Dataset scanning / CSV loading (removed local read_ecg_column)
 # -----------------------------
-def read_ecg_column(csv_path: Path, ecg_col_index: int = 3, header: bool = True) -> np.ndarray:
-    # Your schema: A Frame Index, B Timestamp, C PPG, D ECG
-    df = pd.read_csv(csv_path, header=0 if header else None)
-    if ecg_col_index >= df.shape[1]:
-        raise ValueError(f"{csv_path}: expected ECG column index {ecg_col_index}, got only {df.shape[1]} cols")
-    x = df.iloc[:, ecg_col_index].astype(float).to_numpy()
-    x = np.nan_to_num(x, nan=np.nanmedian(x))
-    return x
 
 
 def scan_files(data_dir: Path, persons_cfg, states: list[str], file_glob: str) -> list[dict]:
@@ -141,7 +109,7 @@ def sliding_windows(x: np.ndarray, fs: int, win_sec: int, overlap: float):
 def collect_windows_metrics_for_files(files, fs, sig_cfg, r_cfg, win_sec, overlap, ecg_col, header):
     all_metrics = []
     for rf in files:
-        x = read_ecg_column(rf["path"], ecg_col_index=ecg_col, header=header)
+        x = read_ecg_csv_column(rf["path"], ecg_col_index=ecg_col, header=header) # Updated call
 
         # filter
         x_f = bandpass_filter(

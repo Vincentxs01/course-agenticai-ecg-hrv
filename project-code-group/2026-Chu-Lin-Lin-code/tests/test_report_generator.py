@@ -79,10 +79,11 @@ class TestGenerateInterpretation:
     def test_interpretation_without_anthropic(self):
         """Test interpretation when anthropic package is not available."""
         features = {"sdnn": 50.0, "rmssd": 30.0}
-        prediction = {"prediction": "baseline", "confidence": 0.9}
+        pass_rate = 0.8
+        evaluation_summary = "All good"
 
         with patch.object(report_generator, 'ANTHROPIC_AVAILABLE', False):
-            result = generate_interpretation(features, prediction)
+            result = generate_interpretation(features, pass_rate=pass_rate, evaluation_summary=evaluation_summary)
 
         assert "discussion" in result
         assert "conclusion" in result
@@ -91,7 +92,8 @@ class TestGenerateInterpretation:
     def test_interpretation_without_api_key(self):
         """Test interpretation when API key is not set."""
         features = {"sdnn": 50.0, "rmssd": 30.0}
-        prediction = {"prediction": "baseline", "confidence": 0.9}
+        pass_rate = 0.8
+        evaluation_summary = "All good"
 
         # Temporarily unset API key
         original_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -100,7 +102,7 @@ class TestGenerateInterpretation:
 
         try:
             with patch.object(report_generator, 'ANTHROPIC_AVAILABLE', True):
-                result = generate_interpretation(features, prediction)
+                result = generate_interpretation(features, pass_rate=pass_rate, evaluation_summary=evaluation_summary)
 
             assert "discussion" in result
             assert "conclusion" in result
@@ -113,10 +115,11 @@ class TestGenerateInterpretation:
     def test_interpretation_returns_dict(self):
         """Test that interpretation always returns a dict with required keys."""
         features = {"sdnn": 50.0, "rmssd": 30.0, "pnn50": 15.0, "mean_hr": 70.0}
-        prediction = {"prediction": "baseline", "confidence": 0.9}
+        pass_rate = 0.8
+        evaluation_summary = "All good"
 
         with patch.object(report_generator, 'ANTHROPIC_AVAILABLE', False):
-            result = generate_interpretation(features, prediction)
+            result = generate_interpretation(features, pass_rate=pass_rate, evaluation_summary=evaluation_summary)
 
         assert isinstance(result, dict)
         assert "discussion" in result
@@ -124,9 +127,6 @@ class TestGenerateInterpretation:
         assert isinstance(result["discussion"], str)
         assert isinstance(result["conclusion"], str)
 
-
-class TestGenerateReportTextFallback:
-    """Tests for text fallback when reportlab is not available."""
 
     @pytest.fixture
     def sample_data(self):
@@ -154,16 +154,12 @@ class TestGenerateReportTextFallback:
                 "hf_power": 800.0,
                 "lf_hf_ratio": 1.5,
             },
-            "prediction": {
-                "prediction": "baseline",
-                "confidence": 0.85,
-                "stress_probability": 0.15,
-                "baseline_probability": 0.85,
-            },
+            "pass_rate": 0.85,
+            "evaluation_summary": "All baseline criteria passed.",
         }
 
     def test_text_fallback_creates_files(self, sample_data):
-        """Test that text fallback creates .txt and .png files."""
+        """Test that text fallback creates .md and .png files."""
         with tempfile.TemporaryDirectory() as tmpdir:
             output_path = Path(tmpdir) / "report.pdf"
 
@@ -173,13 +169,14 @@ class TestGenerateReportTextFallback:
                         sample_data["ecg_data"],
                         sample_data["processed"],
                         sample_data["features"],
-                        sample_data["prediction"],
                         output_path,
+                        pass_rate=sample_data["pass_rate"],
+                        evaluation_summary=sample_data["evaluation_summary"],
                         include_ai_interpretation=False,
                     )
 
-            # Should return path to .txt file
-            assert result.endswith('.txt')
+            # Should return path to .md file
+            assert result.endswith('.md')
             assert Path(result).exists()
 
             # Check .png file was also created
@@ -197,21 +194,21 @@ class TestGenerateReportTextFallback:
                         sample_data["ecg_data"],
                         sample_data["processed"],
                         sample_data["features"],
-                        sample_data["prediction"],
                         output_path,
+                        pass_rate=sample_data["pass_rate"],
+                        evaluation_summary=sample_data["evaluation_summary"],
                         include_ai_interpretation=False,
                     )
 
             with open(result, 'r') as f:
                 content = f.read()
 
-            assert "HRV ANALYSIS REPORT" in content
-            assert "HRV FEATURES" in content
-            assert "CLASSIFICATION" in content
-            assert "DISCUSSION" in content
-            assert "CONCLUSION" in content
-            assert "sdnn:" in content
-            assert "baseline" in content
+            assert "# HRV Analysis Report" in content
+            assert "## 1. HRV Features Summary" in content
+            assert "## 4. Discussion" in content
+            assert "## 5. Conclusion" in content
+            assert "| SDNN (ms)   | 45.50    | 50-100       |" in content # Assert content of the table
+            assert "Overall Pass Rate:" in content
 
     def test_text_fallback_feature_values(self, sample_data):
         """Test that text fallback contains actual feature values."""
@@ -224,8 +221,9 @@ class TestGenerateReportTextFallback:
                         sample_data["ecg_data"],
                         sample_data["processed"],
                         sample_data["features"],
-                        sample_data["prediction"],
                         output_path,
+                        pass_rate=sample_data["pass_rate"],
+                        evaluation_summary=sample_data["evaluation_summary"],
                         include_ai_interpretation=False,
                     )
 
@@ -235,7 +233,7 @@ class TestGenerateReportTextFallback:
             # Check specific values are in the report
             assert "45.50" in content  # sdnn
             assert "32.10" in content  # rmssd
-            assert "85.0%" in content  # confidence
+            assert "85.0%" in content  # pass_rate (confidence changed to pass_rate)
 
 
 class TestGenerateReportWithoutAI:
@@ -267,12 +265,8 @@ class TestGenerateReportWithoutAI:
                 "hf_power": 800.0,
                 "lf_hf_ratio": 1.5,
             },
-            "prediction": {
-                "prediction": "stressed",
-                "confidence": 0.75,
-                "stress_probability": 0.75,
-                "baseline_probability": 0.25,
-            },
+            "pass_rate": 0.75,
+            "evaluation_summary": "Some windows failed baseline criteria.",
         }
 
     def test_report_without_ai_interpretation(self, sample_data):
@@ -285,8 +279,9 @@ class TestGenerateReportWithoutAI:
                     sample_data["ecg_data"],
                     sample_data["processed"],
                     sample_data["features"],
-                    sample_data["prediction"],
                     output_path,
+                    pass_rate=sample_data["pass_rate"],
+                    evaluation_summary=sample_data["evaluation_summary"],
                     include_ai_interpretation=False,
                 )
 
@@ -306,8 +301,9 @@ class TestGenerateReportWithoutAI:
                         sample_data["ecg_data"],
                         sample_data["processed"],
                         sample_data["features"],
-                        sample_data["prediction"],
                         output_path,
+                        pass_rate=sample_data["pass_rate"],
+                        evaluation_summary=sample_data["evaluation_summary"],
                         include_ai_interpretation=False,
                     )
 
@@ -344,12 +340,8 @@ class TestGenerateReportPDF:
                 "hf_power": 800.0,
                 "lf_hf_ratio": 1.5,
             },
-            "prediction": {
-                "prediction": "baseline",
-                "confidence": 0.85,
-                "stress_probability": 0.15,
-                "baseline_probability": 0.85,
-            },
+            "pass_rate": 0.85,
+            "evaluation_summary": "All baseline criteria passed.",
         }
 
     @pytest.mark.skipif(not REPORTLAB_AVAILABLE, reason="reportlab not installed")
@@ -370,8 +362,9 @@ class TestGenerateReportPDF:
                     sample_data["ecg_data"],
                     sample_data["processed"],
                     sample_data["features"],
-                    sample_data["prediction"],
                     output_path,
+                    pass_rate=sample_data["pass_rate"],
+                    evaluation_summary=sample_data["evaluation_summary"],
                     include_ai_interpretation=False,
                 )
 

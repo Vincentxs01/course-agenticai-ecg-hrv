@@ -10,6 +10,10 @@ import numpy as np
 import yaml
 
 
+# repo root (adjust if project structure changes)
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+
 def setup_logging(
     level: int = logging.INFO,
     log_file: Optional[str] = None
@@ -175,3 +179,83 @@ def ensure_directory(path: Union[str, Path]) -> Path:
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def resolve_data_dir(cfg: dict) -> Path:
+    """
+    Resolves the data directory path from the configuration,
+    checking common base paths.
+    """
+    candidates = [
+        cfg.get("dataset", {}).get("data_dir"),
+        cfg.get("data", {}).get("data_dir"),
+        cfg.get("custom", {}).get("data_dir"),
+        cfg.get("wesad", {}).get("data_dir"),
+    ]
+
+    bases = [
+        REPO_ROOT,                  # .../src/utils
+        REPO_ROOT.parent,           # .../src
+        REPO_ROOT.parent.parent,    # .../project-code-group/2026-Chu-Lin-Lin-code
+        REPO_ROOT.parent.parent.parent, # .../project-code-group
+        REPO_ROOT.parent.parent.parent.parent, # .../course-agenticai-ecg-hrv
+    ]
+
+    for c in candidates:
+        if not c:
+            continue
+
+        # Try relative to common bases
+        for b in bases:
+            p = (b / c).resolve()
+            if p.exists():
+                return p
+
+        # Also try as absolute
+        p2 = Path(c).expanduser().resolve()
+        if p2.exists():
+            return p2
+
+    # Common fallbacks relative to course root
+    for b in bases:
+        for p in [(b / "data-group" / "data"), (b / "data-group")]:
+            p = p.resolve()
+            if p.exists():
+                return p
+
+    raise FileNotFoundError("Cannot find data directory (checked config + common fallbacks).")
+
+
+def resolve_sampling_rate(cfg: dict) -> float:
+    """
+    Resolves the sampling rate from the configuration.
+    """
+    return float(cfg.get("signal", {}).get("sampling_rate", 50))
+
+
+def infer_persons_states(data_dir: Path):
+    """
+    Infers person IDs and states (Rest, Active) by scanning the data directory structure.
+    Assumes a structure like data_dir/{person}/{state}/*.csv
+    """
+    persons = [p.name for p in data_dir.iterdir() if p.is_dir()]
+    states = ["Rest", "Active"] # Assuming these are the fixed states for this project
+    return persons, states
+
+
+def scan_csv_files(data_dir: Path, file_glob: str = "*.csv"):
+    """
+    Scans a data directory for CSV files organized by person and state.
+    Returns a list of dictionaries, each representing a record with 'person', 'state', 'path'.
+    """
+    persons, states = infer_persons_states(data_dir)
+    records = []
+    for pid in persons:
+        for st in states:
+            folder = data_dir / pid / st
+            if not folder.exists():
+                continue
+            for f in sorted(folder.glob(file_glob)):
+                records.append({"person": pid, "state": st, "path": f})
+    return records
+

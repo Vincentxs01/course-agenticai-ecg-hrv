@@ -4,7 +4,6 @@
 import numpy as np
 from scipy.signal import welch
 from scipy.interpolate import interp1d
-from scipy.stats import entropy
 from typing import Optional
 
 

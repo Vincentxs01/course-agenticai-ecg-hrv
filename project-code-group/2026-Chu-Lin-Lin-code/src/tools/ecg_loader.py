@@ -1,133 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
 """ECG data loading and validation tool for WESAD dataset."""
 
-import pickle
 import numpy as np
 from pathlib import Path
 from typing import Union, Optional
-
-# WESAD constants
-WESAD_SAMPLING_RATE = 700  # Hz
-WESAD_SUBJECTS = ['S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10',
-                  'S11', 'S13', 'S14', 'S15', 'S16', 'S17']  # S12 excluded
-WESAD_LABELS = {0: 'undefined', 1: 'baseline', 2: 'stress', 3: 'amusement', 4: 'meditation'}
+import pandas as pd
 
 
-def load_wesad_subject(
-    data_dir: Union[str, Path],
-    subject_id: str
-) -> dict:
-    """
-    Load WESAD subject data from pickle file.
-
-    Args:
-        data_dir: Path to WESAD data directory
-        subject_id: Subject identifier (e.g., 'S2', 'S3', etc.)
-
-    Returns:
-        dict: Contains 'signal', 'labels', 'sampling_rate', 'subject_id'
-
-    Raises:
-        FileNotFoundError: If the pickle file doesn't exist
-        ValueError: If subject_id is invalid
-    """
-    data_dir = Path(data_dir)
-    subject_path = data_dir / subject_id / f"{subject_id}.pkl"
-
-    if subject_id not in WESAD_SUBJECTS:
-        raise ValueError(f"Invalid subject ID: {subject_id}. Valid: {WESAD_SUBJECTS}")
-
-    if not subject_path.exists():
-        raise FileNotFoundError(f"WESAD file not found: {subject_path}")
-
-    with open(subject_path, 'rb') as f:
-        data = pickle.load(f, encoding='latin1')
-
-    # Extract chest ECG (700 Hz)
-    ecg = data['signal']['chest']['ECG'].flatten()
-    labels = data['label']
-
-    n_samples = len(ecg)
-    duration_sec = n_samples / WESAD_SAMPLING_RATE
-
-    return {
-        "signal": ecg,
-        "labels": labels,
-        "sampling_rate": WESAD_SAMPLING_RATE,
-        "duration_sec": duration_sec,
-        "n_samples": n_samples,
-        "subject_id": subject_id,
-        "file_path": str(subject_path.absolute()),
-    }
 
 
-def extract_condition_segments(
-    ecg_data: dict,
-    condition: int = 2,
-    min_duration_sec: float = 60.0
-) -> list[dict]:
-    """
-    Extract continuous segments for a specific condition from WESAD data.
 
-    Args:
-        ecg_data: Dictionary from load_wesad_subject()
-        condition: Label to extract (1=baseline, 2=stress, 3=amusement, 4=meditation)
-        min_duration_sec: Minimum segment duration to keep
 
-    Returns:
-        list: List of segment dictionaries with 'signal', 'sampling_rate', etc.
-    """
-    signal = ecg_data["signal"]
-    labels = ecg_data["labels"]
-    fs = ecg_data["sampling_rate"]
 
-    # Find continuous segments of the condition
-    condition_mask = (labels == condition)
-    segments = []
 
-    # Find segment boundaries
-    in_segment = False
-    start_idx = 0
 
-    for i, is_condition in enumerate(condition_mask):
-        if is_condition and not in_segment:
-            start_idx = i
-            in_segment = True
-        elif not is_condition and in_segment:
-            end_idx = i
-            duration = (end_idx - start_idx) / fs
-            if duration >= min_duration_sec:
-                segments.append({
-                    "signal": signal[start_idx:end_idx],
-                    "sampling_rate": fs,
-                    "duration_sec": duration,
-                    "n_samples": end_idx - start_idx,
-                    "condition": condition,
-                    "condition_name": WESAD_LABELS.get(condition, 'unknown'),
-                    "subject_id": ecg_data.get("subject_id"),
-                    "start_sample": start_idx,
-                    "end_sample": end_idx,
-                })
-            in_segment = False
-
-    # Handle segment at end of recording
-    if in_segment:
-        end_idx = len(labels)
-        duration = (end_idx - start_idx) / fs
-        if duration >= min_duration_sec:
-            segments.append({
-                "signal": signal[start_idx:end_idx],
-                "sampling_rate": fs,
-                "duration_sec": duration,
-                "n_samples": end_idx - start_idx,
-                "condition": condition,
-                "condition_name": WESAD_LABELS.get(condition, 'unknown'),
-                "subject_id": ecg_data.get("subject_id"),
-                "start_sample": start_idx,
-                "end_sample": end_idx,
-            })
-
-    return segments
 
 
 def load_ecg(
@@ -158,32 +44,8 @@ def load_ecg(
     if not path.is_file():
         raise ValueError(f"Path is not a file: {file_path}")
 
-    # Handle WESAD pickle files
-    if path.suffix == '.pkl':
-        with open(path, 'rb') as f:
-            data = pickle.load(f, encoding='latin1')
 
-        if 'signal' in data and 'chest' in data['signal']:
-            # WESAD format
-            ecg = data['signal']['chest']['ECG'].flatten()
-            labels = data.get('label', None)
-            sampling_rate = WESAD_SAMPLING_RATE
-        else:
-            raise ValueError("Unrecognized pickle file format")
 
-        n_samples = len(ecg)
-        duration_sec = n_samples / sampling_rate
-
-        result = {
-            "signal": ecg,
-            "sampling_rate": sampling_rate,
-            "duration_sec": duration_sec,
-            "n_samples": n_samples,
-            "file_path": str(path.absolute()),
-        }
-        if labels is not None:
-            result["labels"] = labels
-        return result
 
     # Handle text files (original format)
     try:
@@ -232,30 +94,79 @@ def load_ecg(
     }
 
 
-def load_ecg_batch(
-    file_paths: list[Union[str, Path]],
-    sampling_rate: int = 500
-) -> list[dict]:
+
+
+def read_ecg_csv_column(csv_path: Path, ecg_col_index: int = 3, header: bool = True) -> np.ndarray:
     """
-    Load multiple ECG files.
+    Reads an ECG signal from a CSV file, selecting a specific column.
+
+    Assumes a schema where ECG data is in a specified column.
+    Handles NaN values by replacing them with the median.
 
     Args:
-        file_paths: List of paths to ECG files
-        sampling_rate: Sampling rate in Hz
+        csv_path: Path to the CSV file.
+        ecg_col_index: 0-based index of the ECG column. Default is 3 (D column).
+        header: Whether the CSV has a header row.
 
     Returns:
-        list: List of ECG data dictionaries
+        np.ndarray: The ECG signal as a NumPy array.
+
+    Raises:
+        ValueError: If the specified ECG column index is out of bounds.
     """
-    results = []
-    for path in file_paths:
-        try:
-            data = load_ecg(path, sampling_rate)
-            data["status"] = "success"
-            results.append(data)
-        except Exception as e:
-            results.append({
-                "file_path": str(path),
-                "status": "error",
-                "error": str(e)
-            })
-    return results
+    df = pd.read_csv(csv_path, header=0 if header else None)
+    
+    # Check if a named column 'ECG' exists, otherwise use index
+    if 'ECG' in df.columns:
+        x = df['ECG']
+    elif 'ecg' in df.columns:
+        x = df['ecg']
+    elif ecg_col_index < df.shape[1]:
+        x = df.iloc[:, ecg_col_index]
+    else:
+        raise ValueError(f"{csv_path}: expected ECG column index {ecg_col_index} or 'ECG' column, "
+                         f"but got only {df.shape[1]} columns and no 'ECG' column.")
+    
+    x = x.astype(float).to_numpy()
+    x = np.nan_to_num(x, nan=np.nanmedian(x)) # Replace NaNs with median
+    return x
+
+
+def pick_ecg_column(df: pd.DataFrame) -> str:
+    """
+    Identifies the most likely ECG column in a DataFrame.
+    Prefers columns named 'ECG' (case-insensitive), then falls back to the 4th column (index 3).
+
+    Args:
+        df: Pandas DataFrame containing ECG data.
+
+    Returns:
+        str: The name of the identified ECG column.
+
+    Raises:
+        ValueError: If no suitable ECG column can be found.
+    """
+    for name in ["ECG", "ecg", "Ecg"]:
+        if name in df.columns:
+            return name
+    # Otherwise fall back to 4th column (A,B,C,D -> ECG is D)
+    if df.shape[1] >= 4:
+        return df.columns[3]
+    raise ValueError(f"Cannot find ECG column. Columns={list(df.columns)}")
+
+
+def pick_time_column(df: pd.DataFrame) -> Optional[str]:
+    """
+    Identifies the most likely time column in a DataFrame.
+    Prefers columns named 'Timestamp' or 'Time' (case-insensitive).
+
+    Args:
+        df: Pandas DataFrame containing data.
+
+    Returns:
+        Optional[str]: The name of the identified time column, or None if not found.
+    """
+    for name in ["Timestamp", "timestamp", "Time", "time"]:
+        if name in df.columns:
+            return name
+    return None
