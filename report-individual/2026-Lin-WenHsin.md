@@ -146,7 +146,7 @@ def load_ecg(file_path: str, sampling_rate: int = 500) -> dict:
         "sampling_rate": sampling_rate,
         "duration_sec": len(signal) / sampling_rate
     }
-
+```
 ### 5.2 Signal Processor
 
 **Tools:** `SciPy` (signal), `NumPy`
@@ -172,7 +172,7 @@ def detect_r_peaks(signal, fs, min_dist_sec=0.3):
     distance = int(min_dist_sec * fs)
     peaks, _ = find_peaks(signal, distance=distance, height=np.mean(signal))
     return peaks
-
+```
 ### 5.3 Feature Extractor
 
 **Tools:** `NumPy`, `SciPy` (signal.welch)
@@ -198,7 +198,7 @@ def extract_time_domain_features(rr_intervals: np.ndarray) -> dict:
         "rmssd": np.sqrt(np.mean(diff_rr ** 2)),
         "pnn50": (np.sum(np.abs(diff_rr) > 50) / len(diff_rr)) * 100
     }
-
+```
 ### 5.4 Classifier
 
 **Tools:** `scikit-learn` (`RandomForest`, `SVM`)
@@ -230,7 +230,7 @@ def predict_stress(clf, features):
     confidence = np.max(clf.predict_proba(X))
     
     return {"prediction": prediction, "confidence": confidence}
-
+```
 ### 5.5 Report Generator
 
 **Tools:** `Matplotlib`, `ReportLab` (Optional), `Claude API` (Optional)
@@ -260,7 +260,7 @@ def generate_report(ecg_data, features, prediction, output_path):
     
     plt.savefig(output_path)
     return output_path
-
+```
 ### 5.6 System Adaptation Mechanisms
 
 **Component:** `Orchestrator` & `Profile Store`
