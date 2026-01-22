@@ -1,0 +1,7 @@
+\babel@toc {english}{}\relax 
+\beamer@sectionintoc {1}{Problem \& Motivation}{3}{0}{1}
+\beamer@sectionintoc {2}{System Architecture}{5}{0}{2}
+\beamer@sectionintoc {3}{Demo \& Results}{7}{0}{3}
+\beamer@sectionintoc {4}{Challenges \& Lessons Learned}{8}{0}{4}
+\beamer@sectionintoc {5}{Conclusion}{9}{0}{5}
+\beamer@sectionintoc {6}{Team Contribution}{10}{0}{6}
