@@ -1,0 +1,166 @@
+% !TEX program = xelatex
+% !TEX encoding = UTF-8 Unicode
+%
+% SPDX-License-Identifier: CC-BY-4.0
+% Authors: Chu, Lin, Lin
+
+\documentclass[aspectratio=169]{beamer}
+\mode<presentation>{
+    \usetheme{NordlingLab169}
+}
+
+% 載入必要套件
+\usepackage[english]{babel}
+\usepackage{xeCJK} 
+\usepackage{xltxtra}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage[yyyymmdd]{datetime}
+\renewcommand{\dateseparator}{--}
+
+% 字體設定：XeLaTeX 必備
+\setsansfont{Arial}
+\setCJKmainfont{Microsoft JhengHei} 
+
+% 簡報元數據
+\title[Agentic AI for HRV]{Agentic ECG HRV Baseline Evaluation System}
+\subtitle{Agentic AI Course - Final Presentation}
+% 請記得在此處填入組員的真實名字
+\author[Chu et al.]{Chu, Yen-Chieh \and Lin, Chih-Yi \and Lin, Wen-Hsin}
+\institute[NCKU]{National Cheng Kung University}
+\date{January 19, 2026}
+
+\begin{document}
+
+% --- 1. Title Slide (1 Slide) ---
+\setbeamertemplate{background}[NLTitle]
+\setbeamertemplate{footline}[NLTitle]
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% --- 2. Outline ---
+\setbeamertemplate{background}[NLCC]
+\setbeamertemplate{footline}[NLCC]
+\begin{frame}{Outline}
+    \tableofcontents
+\end{frame}
+
+% --- 3. Problem & Motivation (2 Slides) ---
+\section{Problem \& Motivation}
+\begin{frame}{The Personalization Gap in Healthcare}
+    \begin{itemize}
+        \item \textbf{Fixed Thresholds}: Universal clinical standards fail to account for individual baseline variations.
+        \item \textbf{Activity State Bias}: Physiological signals shift significantly between \textbf{Rest} and \textbf{Active} states.
+        \item \textbf{Manual Review Burden}: Technical staff must manually verify massive amounts of discarded ECG data.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Our Motivation: Agentic Solution}
+    \begin{itemize}
+        \item \textbf{Adaptive Context}: Utilizing Agents to handle multiple activity contexts (Rest / Active).
+        \item \textbf{Scalability}: Reducing manual verification through autonomous quality validation loops.
+    \end{itemize}
+\end{frame}
+
+% --- 4. System Architecture (2 Slides) ---
+\section{System Architecture}
+\begin{frame}{HRV Analysis Agent Workflow}
+    % [T] 確保兩欄都從頂部開始對齊
+    \begin{columns}[T]
+        % 左側文字欄位
+        \begin{column}{0.55\textwidth}
+            % 增加一個固定的頂部間距，確保文字不會因為右圖變大而上下晃動
+            \vspace{0.2cm} 
+            \begin{itemize}
+                \item \textbf{Orchestrator}: Coordinates data ingestion and schedules analysis tasks.
+                \item \textbf{Adaptive Analyzer}: Selects optimal filtering and R-Peak Detector based on real-time signal quality.
+                \item \textbf{Quality Validator}: Verifies HRV metrics against personalized distributions.
+            \end{itemize}
+        \end{column}
+        
+        % 右側圖片欄位
+        \begin{column}{0.4\textwidth}
+            \centering
+        	  \hspace*{-1cm}\includegraphics[width=1.4\textwidth, height=0.85\textheight, keepaspectratio]{Figures/2026-Chu-Lin-Lin-system-design.jpg}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Personalized Profile Store}
+    \begin{columns}[T]
+        \begin{column}{0.95\textwidth} % 使用大寬度確保內容居中
+            \vspace{0.5cm}
+            \setlength{\leftskip}{0.8cm} % 向右移避開邊界藍線
+            
+            % 灰色區塊：Personalized Baselines
+            \begin{block}{Personalized Baselines (\texttt{baselines.json})}
+                Maintains individualized physiological baselines to enable context-aware validation across different activity states.
+            \end{block}
+            
+            \vspace{1em}
+            
+            % 清單說明
+            \begin{itemize}
+                \item Stores statistically estimated reference ranges for HRV metrics such as RMSSD, SDNN, and mean heart rate.
+                \item Enables the agent to "learn" a user's unique heart rate signature over time.
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% --- 5. Demo & Results (2 Slides) ---
+\section{Demo \& Results}
+
+\begin{frame}{Demo \& Results}
+    \begin{figure}
+        \centering
+        % 使用雙引號包裹含空格的路徑，並確保寬度與高度比例適中
+        \includegraphics[width=0.85\textwidth,height=0.7\textheight,keepaspectratio]{"Figures/2026-Chu-Lin-Lin-agentic_solution _result_3.jpg"}
+    \end{figure}
+\end{frame}
+
+% --- 6. Challenges & Lessons Learned (1 Slide) ---
+\section{Challenges \& Lessons Learned}
+\begin{frame}{Challenges \& Lessons Learned}
+    \begin{itemize}
+        \item \textbf{Challenge}: Managing the trade-off between Agent reasoning depth and real-time processing speed.
+        \item \textbf{Lesson}: Importance of standardized data preprocessing for ECG signals (HRV analysis from ECG).
+        \item \textbf{Observation}: Agentic AI significantly reduces "Activity State Bias" compared to static systems.
+    \end{itemize}
+\end{frame}
+
+% --- 7. Conclusion & Q&A (1 Slide) ---
+\section{Conclusion}
+\begin{frame}{Summary}
+    \begin{itemize}
+        \item \textbf{Innovation}: Our system learns individual norms to bridge the monitoring gap.
+        \item \textbf{Efficiency}: Adaptive loops reduce the need for manual signal quality verification.
+    \end{itemize}
+    \vspace{1.5em}
+    \centering
+    \Large{\textbf{Thank you! Questions?}}
+\end{frame}
+
+% --- 8. Contribution List (1 Slide) ---
+\section{Team Contribution}
+\begin{frame}{Team Contribution}
+    \begin{itemize}
+        \setlength{\leftskip}{0.5cm} % 稍微向右移避開邊界藍線
+        \item \textbf{Chu, Yen-Chieh}: \\ 
+        Data-group, Chatbase, Slide, Presentation
+        
+        \vspace{0.5em}
+        
+        \item \textbf{Lin, Chih-Yi}: \\ 
+        Project-code-group, Tests-group, Agentic approach, Slide, Presentation
+        
+        \vspace{0.5em}
+        
+        \item \textbf{Lin, Wen-Hsin}: \\ 
+        System-design-group, Chatbase, Presentation
+    \end{itemize}
+\end{frame}
+
+
+\end{document}
