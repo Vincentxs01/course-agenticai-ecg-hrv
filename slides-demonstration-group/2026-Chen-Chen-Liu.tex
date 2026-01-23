@@ -1,0 +1,153 @@
+% !TEX program = xelatex
+% !TEX encoding = UTF-8 Unicode
+%
+% SPDX-License-Identifier: CC-BY-4.0
+% Your Name, Your Group Members
+
+% Use 16:9 aspect ratio (required for this course)
+\documentclass[aspectratio=169]{beamer}
+\mode<presentation>{
+    \usetheme{NordlingLab169}
+}
+
+% Load packages
+\usepackage[english]{babel}
+\let\latinencoding\relax
+\usepackage{xltxtra}
+% Use a system font (Candara is the official font, but may not be available)
+% Alternatives: Helvetica Neue (macOS), DejaVu Sans (Linux), Calibri (Windows)
+\setsansfont{DejaVu Sans}
+
+\usepackage{graphicx}
+\usepackage[yyyymmdd]{datetime}
+\renewcommand{\dateseparator}{--}
+
+% Presentation metadata
+\title[Short Title]{ECG Pomodoro Timer}
+\subtitle{Agentic AI Course - Final Presentation}
+\author[Names]{Chen,~Guo-Zhu \and Chen,~Kun-Yu \and Liu,~Yung-Hsin}
+\institute[NCKU]{
+    National Cheng Kung University\\
+    Agentic AI Course
+}
+\date{Spring 2026}
+\subject{Your presentation topic}
+
+\begin{document}
+
+% === TITLE SLIDE ===
+\setbeamertemplate{background}[NLTitle]
+\setbeamertemplate{footline}[NLTitle]
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% === OUTLINE (with CC license footer) ===
+\setbeamertemplate{background}[NLCC]
+\setbeamertemplate{footline}[NLCC]
+\begin{frame}{Outline}
+    \tableofcontents
+\end{frame}
+
+% === CONTENT SLIDES ===
+\section{Problem \& Motivation}
+
+\begin{frame}{Problem Statement}
+    \begin{itemize}
+        \item \textbf{What problem are you solving?} \\
+        Prolonged focus during software development causes fatigue, resulting in reduced code quality.
+
+        \vspace{0.5em}
+        \item \textbf{Why does it matter?} \\
+        Fatigue-induced tunnel vision leads to unnecessary variables, inefficient code structure, increased memory usage, and higher time complexity.
+        
+        \vspace{0.5em}
+        \item \textbf{Who are the stakeholders?} \\
+        Software engineers and developers, students in intensive coding courses.
+    \end{itemize}
+\end{frame}
+
+
+\section{System Architecture}
+
+\begin{frame}{Architecture Overview}
+    \begin{itemize}
+        \item React Frontend (Pomodoro UI): Collects segments, calls ECG + AI services
+        \item  ECG Service: Process ECG data for AI Service
+        \item AI Service: Calls Gemini API
+    \end{itemize}
+    % Include your architecture diagram:
+     \includegraphics[width=0.9\textwidth]{ComponentDiagram.png}
+\end{frame}
+
+\begin{frame}{Architecture Overview}
+     \includegraphics[width=1\textwidth]{SequenceDiagram.png}
+\end{frame}
+
+\section{Demo \& Results}
+
+\begin{frame}{Results}
+  \centering
+  \begin{minipage}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{pomodoro_rest_result.png}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.49\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{pomodoro_work_result.png}
+  \end{minipage}
+
+  \begin{itemize}
+    \item Work and Rest
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Results}
+    
+    \includegraphics[width=1\textwidth]{AI_advice_result.png}
+    \begin{itemize}
+        \item AI advice
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Challenges \& Lessons Learned}
+    \begin{itemize}
+        \item \textbf{Challenges}
+        \begin{itemize}
+            \item Deploying and configuring an agentic AI environment with multiple components and workflows.
+            \item Understanding ECG signals, including waveform segmentation and rhythm-related feature extraction.
+            \item Designing and compiling presentation slides using LaTeX Beamer.
+        \end{itemize}
+
+        \vspace{0.8em}
+        \item \textbf{Lessons Learned}
+        \begin{itemize}
+            \item Learning how to craft precise and structured prompts to guide AI agents toward more relevant and task-aligned outputs.
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+
+\section{Conclusion}
+
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item Summary of achievements
+        \begin{itemize}
+            \item End-to-End agentic ECG-Pomodoro System
+        \end{itemize}
+        \item Future work possibilities
+        \begin{itemize}
+            \item Real Hardware Integration
+            \item User Personalization
+        \end{itemize}
+        \item Key takeaways
+    \end{itemize}
+
+    \vspace{1em}
+    \centering
+    \Large{Thank you! Questions?}
+\end{frame}
+
+\end{document}
