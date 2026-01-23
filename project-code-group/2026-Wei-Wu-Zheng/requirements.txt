@@ -1,0 +1,16 @@
+# Drowsiness Detection System - Dependencies
+# Python 3.10+
+
+# Core scientific computing
+numpy>=1.24.0
+scipy>=1.11.0
+pandas>=2.0.0
+
+# Web interface
+streamlit>=1.28.0
+
+# Visualization
+plotly>=5.18.0
+
+# Optional: For future Claude API integration
+# anthropic>=0.18.0

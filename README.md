@@ -54,9 +54,9 @@ See the `README.md` in each folder for detailed requirements, grading criteria, 
 | Date | Time | Submissions Due |
 |------|------|-----------------|
 | Fri 2026-01-16 | 10:00 | SSH Public Key, Case Brief |
-| Tue 2026-01-20 | 13:00 | Data, Project Code, Test Cases, System Design |
-| Wed 2026-01-21 | 13:00 | Presentation Slides, Video, Reflection |
-| Fri 2026-01-23 | 13:00 | Technical Report |
+| Wed 2026-01-28 | 13:00 | Data, Project Code, Test Cases, System Design |
+| Wed 2026-01-28 | 13:00 | Presentation Slides, Video, Reflection |
+| Wed 2026-01-28 | 13:00 | Technical Report |
 
 **All times are Taiwan Standard Time (UTC+8).**
 

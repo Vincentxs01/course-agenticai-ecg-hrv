@@ -9,7 +9,170 @@
 # Temporary handover document for container setup testing
 handover.md
 
+# Claude session notes (local reference only)
+CLAUDE_SESSION_NOTES.md
+TODO_FOR_STUDENT.md
+*-INSTRUCTIONS.md
 
+# =============================================================================
+# AI Assistant Tools
+# =============================================================================
+
+# Anthropic / Claude
+.claude/
+CLAUDE.md
+
+# Google Gemini
+.gemini/
+GEMINI.md
+
+# OpenAI / ChatGPT
+.openai/
+.chatgpt/
+OPENAI.md
+CHATGPT.md
+
+# GitHub Copilot
+.copilot/
+.github/copilot/
+COPILOT.md
+
+# Cursor IDE
+.cursor/
+.cursorignore
+.cursorrules
+CURSOR.md
+
+# Codeium / Windsurf
+.codeium/
+.windsurf/
+CODEIUM.md
+WINDSURF.md
+
+# Amazon CodeWhisperer / Q
+.amazonq/
+CODEWHISPERER.md
+
+# Tabnine
+.tabnine/
+
+# Codex
+.codex/
+
+# Sourcegraph Cody
+.cody/
+CODY.md
+
+# Continue.dev
+.continue/
+CONTINUE.md
+
+# Aider
+.aider/
+.aider.*
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v3/
+
+# Supermaven
+.supermaven/
+
+# =============================================================================
+# AI Frameworks
+# =============================================================================
+
+# LlamaIndex
+.llama_index/
+
+# LangChain
+.langchain/
+
+# Hugging Face
+.huggingface/
+.hf/
+
+# =============================================================================
+# Image Generation AI
+# =============================================================================
+
+# Stable Diffusion / StabilityAI
+.sdxl/
+.stabilityai/
+.stable-diffusion/
+
+# ComfyUI
+.comfyui/
+
+# =============================================================================
+# Local AI Runtimes
+# =============================================================================
+
+# Ollama
+.ollama/
+
+# LM Studio
+.lmstudio/
+
+# LocalAI
+.localai/
+
+# Jan.ai
+.jan/
+
+# =============================================================================
+# AI Dev Platforms
+# =============================================================================
+
+# GPT Engineer
+.gpteng/
+
+# Sweep AI
+.sweep/
+
+# Devin
+.devin/
+
+# Bolt.new
+.bolt/
+
+# v0.dev
+.v0/
+
+# Replit
+.replit/
+replit.nix
+
+# =============================================================================
+# Generic AI Config
+# =============================================================================
+.ai/
+ai-instructions.md
+.instructions
+
+# =============================================================================
+# NordlingLab Beamer Template (ignored in any subfolder)
+# =============================================================================
+
+# Template main file
+NordlingLab_template_beamer.tex
+
+# Beamer theme style files
+beamercolorthemeNordlingLab.sty
+beamerfontthemeNordlingLab.sty
+beamerinnerthemeNordlingLab.sty
+beamerouterthemeNordlingLab.sty
+beamerouterthemeNordlingLab169.sty
+beamerthemeNordlingLab.sty
+beamerthemeNordlingLab169.sty
+
+# Template logos and banners
+CClogo.pdf
+NCKUMElogo.pdf
+NCKUlogo.pdf
+NordlingLabbanner169.pdf
+NordlingLabbanner43.pdf
+NordlingLablogo.pdf
+NordlingLabtriple.pdf
 
 # =============================================================================
 # Python

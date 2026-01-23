@@ -9,7 +9,7 @@ This folder contains group presentation slides for the final demonstration.
 - **Format:** LaTeX Beamer (`.tex`) with Figures (`.pdf`,`.png`, or `.jpg`)
 - **Template:** NordlingLab Beamer 16:9 template (required)
 - **Compiler:** XeLaTeX (required for the template)
-- **Naming:** `YYYY-FamilyName1-FamilyName2-FamilyName3.tex` (alphabetical order, ASCII only)
+- **Naming:** `YYYY-FamilyName1-FamilyName2-FamilyName3.tex` (alphabetical order, ASCII only). If you have less than three figures, then include them named `YYYY-FamilyName1-FamilyName2-FamilyName3-FigureX.pdf`, otherwise include all your figures in a folder named `YYYY-FamilyName1-FamilyName2-FamilyName3-Figures`.
 - **License:** Include license declaration in the document (CC-BY-4.0 recommended)
 
 ### Why Beamer/LaTeX?
@@ -64,6 +64,8 @@ You **must** use the official NordlingLab Beamer template for your presentation.
 **Source:** https://bitbucket.org/nordlinglab/nordlinglab-template-beamer/
 
 ### Template Installation
+
+Do not add the template files to any folder in this repository. The templates belong in their own external repository and should not be added to this one.
 
 #### macOS
 
@@ -455,7 +457,8 @@ Before submitting, verify:
 - [ ] Uses NordlingLab169 theme with 16:9 aspect ratio
 - [ ] Uses correct background/footline templates (NLTitle, NLCC, NL)
 - [ ] All images included with correct names
-- [ ] Compiles without errors using XeLaTeX
+- [ ] None of the Nordling Lab Beamer template files are included
+- [ ] Compiles without errors using LuaLaTeX or XeLaTeX
 - [ ] PDF renders correctly
 - [ ] No personally identifiable information (PII)
 - [ ] All group members listed as authors
