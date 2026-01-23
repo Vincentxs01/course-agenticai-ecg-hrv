@@ -1,0 +1,17 @@
+﻿person,state,file,pass_rate,n_windows,n_pass
+first_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Active\595_rotate_20260115_193808_extended_poll.bin_align.csv,0.0,5,0
+first_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Active\595_bike_level5_20260115_194707_extended_poll.bin_align.csv,0.8947368421052632,19,17
+first_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Active\595_bike_level3_20260115_195438_extended_poll.bin_align.csv,0.9411764705882353,17,16
+first_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Active\595_bike_level1_20260115_200219_extended_poll.bin_align.csv,1.0,21,21
+first_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Rest\595_speak_20260115_193315_extended_poll.bin_align.csv,1.0,5,5
+first_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Rest\595_static_level1_20260115_192512_extended_poll.bin_align.csv,1.0,5,5
+first_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Rest\595_static_level3_20260115_192827_extended_poll.bin_align.csv,1.0,7,7
+first_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\first_person\Rest\595_static_level5_20260115_194157_extended_poll.bin_align.csv,1.0,5,5
+second_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Active\809_bike_level1_20260113_235831_extended_poll.bin_align.csv,0.9473684210526315,19,18
+second_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Active\809_bike_level5_20260113_234309_extended_poll.bin_align.csv,1.0,17,17
+second_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Active\809_bike_levle3_20260113_235055_extended_poll.bin_align.csv,1.0,19,19
+second_person,Active,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Active\809_rotate_20260113_233459_extended_poll.bin_align.csv,1.0,7,7
+second_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Rest\809_static_level1_20260113_232205_extended_poll.bin_align.csv,0.6,5,3
+second_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Rest\809_speak_20260113_233057_extended_poll.bin_align.csv,1.0,5,5
+second_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Rest\809_static_level3_20260113_232702_extended_poll.bin_align.csv,1.0,5,5
+second_person,Rest,C:\Users\julia\2026_Agentic_AI\course-agenticai-ecg-hrv\data-group\2026-Chu-Lin-Lin-data\data\second_person\Rest\809_static_level5_20260113_233816_extended_poll.bin_align.csv,1.0,5,5

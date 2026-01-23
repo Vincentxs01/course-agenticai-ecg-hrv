@@ -1,0 +1,12 @@
+{
+  "recommended": {
+    "k_rest": 2.5,
+    "k_active": 2.5
+  },
+  "summary": {
+    "rest_mean_pass_rate": 1.0,
+    "active_mean_pass_rate": 1.0,
+    "score": 3.5
+  },
+  "notes": "These thresholds were selected to keep Rest pass_rate high while keeping Active informative (not all-pass/all-fail)."
+}
